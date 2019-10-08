@@ -105,7 +105,8 @@ void processInput(GLFWwindow *window)
     }
 }
 
-void worldRun() {
+void worldRun()
+{
     /** Ground **/
     // 1. Define body
     b2BodyDef groundDef;
@@ -136,13 +137,13 @@ void worldRun() {
     // 4.2. Add fixture
     box->CreateFixture(&boxFxtDef);
 
+    /** Simulation **/
     // Prepare for simulation. Typically we use a time step of 1/60 of a
     // second (60Hz) and 10 iterations. This provides a high quality simulation
     // in most game scenarios.
     float32 timeStep = 1.0f / 60.0f;
     int32 velocityIterations = 6;
     int32 positionIterations = 2;
-
     // This is our little game loop.
     for (int32 i = 0; i < 60; ++i)
     {
@@ -158,7 +159,8 @@ void worldRun() {
     }
 }
 
-int beforeRender() {
+int beforeRender()
+{
     /** Initialize GLFW **/
     glfwInit();
     
@@ -198,7 +200,8 @@ int beforeRender() {
     return 0;
 }
 
-int inRender(Shader shader) {    
+int inRender(Shader shader)
+{
     
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
@@ -269,7 +272,8 @@ int inRender(Shader shader) {
     return 0;
 }
 
-int afterRender() {
+int afterRender()
+{
     
     glfwTerminate();
     
