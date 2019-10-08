@@ -21,11 +21,8 @@
 #include "../Headers/Shader.h"
 //#include "../Headers/stb_image.h"
 
-using namespace std;
-
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
-
 
 /** Camera setting **/
 glm::vec3 camPosition = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -37,18 +34,80 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 /** Box2D world **/
+b2Vec2 gravity(0.0f, -10.0f);
+b2World world(gravity);
+void worldRun();
+
+/** Render functions **/
+GLFWwindow *window;
+int beforeRender();
+int inRender(Shader shader);
+int afterRender();
+
+
+/** Setup vertex data **/
+// Define vertices
+// Each vertex includes 3 coordinates (x, y, z:depth), the middle point of space is (0.0, 0.0, 0.0)
+float vertices[] = {
+    // Position          // Color
+     0.5f, -0.5f, 0.0f,  0.8f, 0.0f, 0.0f, // Right
+    -0.5f, -0.5f, 0.0f,  0.0f, 0.8f, 0.0f, // Left
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 0.8f  // Top
+};
 
 int main(int argc, const char *argv[])
 {
-    B2_NOT_USED(argc);
-    B2_NOT_USED(argv);
+    /** World **/
+    worldRun();
+    
+    
+    /** Render **/
+    beforeRender();
+    Shader shader("../Shaders/VertexShader.glsl", "../Shaders/FragmentShader.glsl");
+    inRender(shader);
+    afterRender();
+    
+    return 0;
+}
 
-    // Define the gravity vector.
-    b2Vec2 gravity(0.0f, -10.0f);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+{
+    // Reset the size of glViewport
+    glViewport(0, 0, width, height);
+}
 
-    // Construct a world object, which will hold and simulate the rigid bodies.
-    b2World world(gravity);
+void processInput(GLFWwindow *window)
+{
+    /** Window : [ESC] **/
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) { // If key did not get pressed it will return GLFW_RELEASE
+        glfwSetWindowShouldClose(window, true);
+    }
+    
+    /** MixRation : [UP] [Down] **/
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        ;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        ;
+    }
+    
+    /** Camera : [W] [S] [A] [D] **/
+    float camSpeed = 0.005f;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camPosition += camSpeed * camFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camPosition -= camSpeed * camFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camPosition -= glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camPosition += glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+    }
+}
 
+void worldRun() {
     // Define the ground body.
     b2BodyDef groundBodyDef;
     groundBodyDef.position.Set(0.0f, -10.0f);
@@ -110,9 +169,9 @@ int main(int argc, const char *argv[])
 
         printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
     }
-    
-    
-    
+}
+
+int beforeRender() {
     /** Initialize GLFW **/
     glfwInit();
     
@@ -128,9 +187,9 @@ int main(int argc, const char *argv[])
 #endif
     
     /** Create a GLFW window **/
-    GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "xmxOpenGL", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "xmxOpenGL", NULL, NULL);
     if (window == NULL) {
-        cout << "Failed to create GLFW window." << endl;
+        std::cout << "Failed to create GLFW window." << std::endl;
         glfwTerminate();
         return -1;
     }
@@ -143,32 +202,20 @@ int main(int argc, const char *argv[])
     
     // Initialize GLAD : this should be done before using any openGL function
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        cout << "Failed to initialize GLAD." << endl;
+        std::cout << "Failed to initialize GLAD." << std::endl;
         glfwTerminate(); // This line isn't in the official source code, but I think that it should be added here.
         return -1;
     }
     
-    /** Bulid and compile shaders **/
-    Shader ourShader("../Shaders/VertexShader.glsl", "../Shaders/FragmentShader.glsl");
+
+    return 0;
+}
+
+int inRender(Shader shader) {    
     
-    /** Setup vertex data **/
-    // Define vertices
-    // Each vertex includes 3 coordinates (x, y, z:depth), the middle point of space is (0.0, 0.0, 0.0)
-    float vertices[] = {
-        // Position          // Color
-         0.5f, -0.5f, 0.0f,  0.8f, 0.0f, 0.0f, // Right
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.8f, 0.0f, // Left
-         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 0.8f  // Top
-    };
-    // Define the indices of vertices we want
-    unsigned int indices[] = {
-        0, 1, 2 // Triangle
-    };
-    
-    unsigned int VAO, VBO, EBO;
+    unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
     
     // Bind the VAO
     glBindVertexArray(VAO);
@@ -176,9 +223,6 @@ int main(int argc, const char *argv[])
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // glBufferData() will copy datas to the buffer which is being bound right now
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // Bind the EBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     
     /** glVertexAttribPointer() will get each vertex attributes from the VBO
      *  void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer);
@@ -208,17 +252,17 @@ int main(int argc, const char *argv[])
         /** Other rendering operations **/
         
         // Set background clolor
-        glClearColor(0.2f, 0.2f, 0.5f, 0.2f); // Set color value (R,G,B,A) - Set Status
+        glClearColor(0.2f, 0.2f, 0.5f, 1.0f); // Set color value (R,G,B,A) - Set Status
         glClear(GL_COLOR_BUFFER_BIT); // Use the color to clear screen - Use Status
         
         /** Render triangle **/
-        ourShader.use();
+        shader.use();
         
         glBindVertexArray(VAO);
         // In fact, we don't need to bind the VAO every render loop here since we only have a single VAO. We just do it so to keep things a bit organized
         
         // Tell OpenGL to draw 6 vertices whose indices are stored in the VBO
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         // glDrawElements() will access the elements in the VAO which is being bound right now
         
         //glBindVertexArray(0); // Again, we don't need to unbind it right now
@@ -233,46 +277,14 @@ int main(int argc, const char *argv[])
     // Optional: De-allocate all resources once they've outlived their purpoose
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    
-    glfwTerminate();
+//    glDeleteBuffers(1, &EBO);
     
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    // Reset the size of glViewport
-    glViewport(0, 0, width, height);
-}
-
-void processInput(GLFWwindow *window)
-{
-    /** Window : [ESC] **/
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) { // If key did not get pressed it will return GLFW_RELEASE
-        glfwSetWindowShouldClose(window, true);
-    }
+int afterRender() {
     
-    /** MixRation : [UP] [Down] **/
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        ;
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        ;
-    }
+    glfwTerminate();
     
-    /** Camera : [W] [S] [A] [D] **/
-    float camSpeed = 0.005f;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camPosition += camSpeed * camFront;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camPosition -= camSpeed * camFront;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camPosition -= glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camPosition += glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
-    }
+    return 0;
 }
