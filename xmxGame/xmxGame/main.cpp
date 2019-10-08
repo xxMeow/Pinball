@@ -44,9 +44,7 @@ int beforeRender();
 int inRender(Shader shader);
 int afterRender();
 
-
 /** Setup vertex data **/
-// Define vertices
 // Each vertex includes 3 coordinates (x, y, z:depth), the middle point of space is (0.0, 0.0, 0.0)
 float vertices[] = {
     // Position          // Color
@@ -108,46 +106,35 @@ void processInput(GLFWwindow *window)
 }
 
 void worldRun() {
-    // Define the ground body.
-    b2BodyDef groundBodyDef;
-    groundBodyDef.position.Set(0.0f, -10.0f);
+    /** Ground **/
+    // 1. Define body
+    b2BodyDef groundDef;
+    groundDef.position.Set(0.0f, -10.0f);
+    // 2. Create body by def
+    b2Body* ground = world.CreateBody(&groundDef);
+    // 3. Set shape
+    b2PolygonShape groundShape;
+    groundShape.SetAsBox(50.0f, 10.0f); // The extents are the half-widths of the box.
+    // 4. Add fixture
+    ground->CreateFixture(&groundShape, 0.0f); // Add the ground fixture to the ground body.
 
-    // Call the body factory which allocates memory for the ground body
-    // from a pool and creates the ground box shape (also from a pool).
-    // The body is also added to the world.
-    b2Body* groundBody = world.CreateBody(&groundBodyDef);
-
-    // Define the ground box shape.
-    b2PolygonShape groundBox;
-
-    // The extents are the half-widths of the box.
-    groundBox.SetAsBox(50.0f, 10.0f);
-
-    // Add the ground fixture to the ground body.
-    groundBody->CreateFixture(&groundBox, 0.0f);
-
-    // Define the dynamic body. We set its position and call the body factory.
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.position.Set(0.0f, 4.0f);
-    b2Body* body = world.CreateBody(&bodyDef);
-
-    // Define another box shape for our dynamic body.
-    b2PolygonShape dynamicBox;
-    dynamicBox.SetAsBox(1.0f, 1.0f);
-
-    // Define the dynamic body fixture.
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &dynamicBox;
-
-    // Set the box density to be non-zero, so it will be dynamic.
-    fixtureDef.density = 1.0f;
-
-    // Override the default friction.
-    fixtureDef.friction = 0.3f;
-
-    // Add the shape to the body.
-    body->CreateFixture(&fixtureDef);
+    /** Box **/
+    // 1. Define body
+    b2BodyDef boxDef;
+    boxDef.type = b2_dynamicBody;
+    boxDef.position.Set(0.0f, 4.0f);
+    // 2. Create body by def
+    b2Body* box = world.CreateBody(&boxDef);
+    // 3. Set shape
+    b2PolygonShape boxShp;
+    boxShp.SetAsBox(1.0f, 1.0f);
+    // 4.1. Define fixture
+    b2FixtureDef boxFxtDef;
+    boxFxtDef.shape = &boxShp;
+    boxFxtDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
+    boxFxtDef.friction = 0.3f; // Override the default friction.
+    // 4.2. Add fixture
+    box->CreateFixture(&boxFxtDef);
 
     // Prepare for simulation. Typically we use a time step of 1/60 of a
     // second (60Hz) and 10 iterations. This provides a high quality simulation
@@ -164,8 +151,8 @@ void worldRun() {
         world.Step(timeStep, velocityIterations, positionIterations);
 
         // Now print the position and angle of the body.
-        b2Vec2 position = body->GetPosition();
-        float32 angle = body->GetAngle();
+        b2Vec2 position = box->GetPosition();
+        float32 angle = box->GetAngle();
 
         printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
     }
