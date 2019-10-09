@@ -30,12 +30,12 @@ void processInput(GLFWwindow *window);
 b2Vec2 gravity(0.0f, -10.0f);
 b2World world(gravity);
 b2Body* ball;
-b2Vec2 force(1.5f, 1.5f);
+b2Vec2 force(5.0f, -3.0f);
 void genesis();
 
 /** Simulation settings **/
 int stepCount = 0;
-float32 timeStep = 1.0f / 30.0f; //TODO: Return to 60Hz
+float32 timeStep = 1.0f / 60.0f; //TODO: Return to 60Hz
 int32 velocityIterations = 6;
 int32 positionIterations = 2;
 uint32 flags = 0;
@@ -171,6 +171,7 @@ void processInput(GLFWwindow *window)
         } else {
             cam.center.Set(-27.0f, cam.center.y);
         }
+        
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         if (cam.center.x + camStep <= 27.0f) {
@@ -179,7 +180,6 @@ void processInput(GLFWwindow *window)
             cam.center.Set(27.0f, cam.center.y);
         }
     }
-
     
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         ball->ApplyLinearImpulse(force, ball->GetWorldCenter(), true);
@@ -194,7 +194,7 @@ void genesis()
     // 1. Define body
     b2BodyDef ballDef;
     ballDef.type = b2_dynamicBody;
-    ballDef.position.Set(10.0f, 10.0f);
+    ballDef.position.Set(-20.0f, 10.0f);
     // 2. Create body by def
     ball = world.CreateBody(&ballDef);
     // 3. Set shape
@@ -204,9 +204,9 @@ void genesis()
     // 4.1. Define fixture
     b2FixtureDef ballFixDef;
     ballFixDef.shape = &ballShape;
-    ballFixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
+    ballFixDef.density = 0.5f; // Set the box density to be non-zero, so it will be dynamic.
     ballFixDef.friction = 0.5f; // Override the default friction.
-    ballFixDef.restitution = 0.4f;
+    ballFixDef.restitution = 1.0f;
     // 4.2. Add fixture
     ball->CreateFixture(&ballFixDef);
     
@@ -249,7 +249,7 @@ void genesis()
     // 1. Define body
     b2BodyDef boxDef;
     boxDef.type = b2_dynamicBody;
-    boxDef.position.Set(0.0f, 11.0f);
+    boxDef.position.Set(-30.0f, 11.0f);
     // 2. Create body by def
     b2Body* box = world.CreateBody(&boxDef);
     // 3. Set shape
