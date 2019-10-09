@@ -44,6 +44,10 @@ int stepCount = 0;
 float32 timeStep = 1.0f / 60.0f;
 int32 velocityIterations = 6;
 int32 positionIterations = 2;
+uint32 flags = 0;
+bool flagDrawShapes = true;
+bool flagDrawJoints = true;
+
 
 /** Render functions **/
 GLFWwindow *window;
@@ -96,6 +100,13 @@ int main(int argc, const char *argv[])
     // Uncomment this call to draw in wireframe polygons
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Option: GL_FILL(default), GL_POINT, GL_LINE
     
+    flags += flagDrawShapes * b2Draw::e_shapeBit;
+    flags += flagDrawJoints * b2Draw::e_jointBit;
+    draw.SetFlags(flags);
+    world.SetAllowSleeping(true);
+    world.SetWarmStarting(true);
+    world.SetContinuousPhysics(true);
+    world.SetSubStepping(false);
     
     b2Vec2 myPoint(0.0f, 0.0f);
     b2Color myColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -124,9 +135,8 @@ int main(int argc, const char *argv[])
         printf("G: %4.2f %4.2f\n", groundPtr->GetPosition().x, groundPtr->GetPosition().y);
         
         /** Prepare buffer **/
-        
-        draw.DrawPolygon(&(groundShape->GetVertex(0)), groundShape->GetVertexCount(), myColor);
-        draw.DrawPolygon(&(boxShape->GetVertex(0)), boxShape->GetVertexCount(), myColor);
+        world.SetDebugDraw(&draw);
+        world.DrawDebugData();
         
         
         /** Display **/
