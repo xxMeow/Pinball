@@ -37,7 +37,7 @@ void processInput(GLFWwindow *window);
 /** Box2D world **/
 b2Vec2 gravity(0.0f, -10.0f);
 b2World world(gravity);
-void worldRun();
+void genesis();
 
 /** Simulation settings **/
 float32 timeStep = 1.0f / 60.0f;
@@ -58,15 +58,12 @@ float vertices[] = {
 
 int main(int argc, const char *argv[])
 {
-    /** World **/
-    worldRun();
+    /** Setup world **/
+    genesis();
     
-    
-    /** Render **/
+    /** Prepare for rendering **/
     // Initialize GLFW
     glfwInit();
-    
-    /** Set basic context **/
     // Set OpenGL version number as 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -149,8 +146,10 @@ int main(int argc, const char *argv[])
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Option: GL_FILL(default), GL_POINT, GL_LINE
         
     int i = 0;
-    b2Body* groundPtr = world.GetBodyList()->GetNext();
-    b2Body* boxPtr = world.GetBodyList()->GetNext();
+    b2Vec2 myPoint(0.0f, 0.0f);
+    b2Color myColor(1.0f, 1.0f, 1.0f, 1.0f);
+    b2Body* groundPtr = world.GetBodyList();
+    b2Body* boxPtr = groundPtr->GetNext();
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         // Check for events
@@ -162,8 +161,8 @@ int main(int argc, const char *argv[])
         glClearColor(0.2f, 0.2f, 0.5f, 1.0f); // Set color value (R,G,B,A) - Set Status
         glClear(GL_COLOR_BUFFER_BIT); // Use the color to clear screen - Use Status
         
-        
-        
+        draw.DrawPoint(myPoint, 50.0f, myColor);
+        draw.Flush();
         
         
         world.Step(timeStep, velocityIterations, positionIterations);
@@ -261,12 +260,12 @@ void processInput(GLFWwindow *window)
 
 
 
-void worldRun()
+void genesis()
 {
     /** Ground **/
     // 1. Define body
     b2BodyDef groundDef;
-    groundDef.position.Set(0.0f, -10.0f);
+    groundDef.position.Set(0.0f, -20.0f);
     // 2. Create body by def
     b2Body* ground = world.CreateBody(&groundDef);
     // 3. Set shape
@@ -292,21 +291,4 @@ void worldRun()
     boxFxtDef.friction = 0.3f; // Override the default friction.
     // 4.2. Add fixture
     box->CreateFixture(&boxFxtDef);
-
-    /** Simulation **/
-    // Prepare for simulation. Typically we use a time step of 1/60 of a second (60Hz) and 10 iterations.
-    // This provides a high quality simulation in most game scenarios.
-    
-    // This is our little game loop.
-//    for (int32 i = 0; i < 60; ++i)
-//    {
-//        // Instruct the world to perform a single step of simulation.
-//        // It is generally best to keep the time step and iterations fixed.
-//        world.Step(timeStep, velocityIterations, positionIterations);
-//
-//        // Rendering
-//        b2Vec2 position = box->GetPosition();
-//        float32 angle = box->GetAngle();
-//        printf("[%d] %4.2f %4.2f %4.2f\n", i, position.x, position.y, angle);
-//    }
 }
