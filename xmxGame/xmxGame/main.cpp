@@ -22,14 +22,6 @@
 #include "../Headers/Display.h"
 //#include "../Headers/stb_image.h"
 
-//#define WINDOW_WIDTH 800
-//#define WINDOW_HEIGHT 600
-
-/** Camera setting **/
-glm::vec3 camPosition = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
 /** Callback functions **/
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -37,11 +29,13 @@ void processInput(GLFWwindow *window);
 /** Box2D world **/
 b2Vec2 gravity(0.0f, -10.0f);
 b2World world(gravity);
+b2Body* ball;
+b2Vec2 force(0.0f, 2.5f);
 void genesis();
 
 /** Simulation settings **/
 int stepCount = 0;
-float32 timeStep = 1.0f / 60.0f;
+float32 timeStep = 1.0f / 30.0f; //TODO: Return to 60Hz
 int32 velocityIterations = 6;
 int32 positionIterations = 2;
 uint32 flags = 0;
@@ -106,18 +100,15 @@ int main(int argc, const char *argv[])
     world.SetAllowSleeping(true);
     world.SetWarmStarting(true);
     world.SetContinuousPhysics(true);
-    world.SetSubStepping(false);
+    world.SetSubStepping(true);
     
     b2Vec2 myPoint(0.0f, 0.0f);
     b2Color myColor(1.0f, 1.0f, 1.0f, 1.0f);
     
+    /** For logging **/
     b2Body *boxPtr = world.GetBodyList();
     b2Body *groundPtr = boxPtr->GetNext();
     
-    b2Fixture *groundFixPtr = groundPtr->GetFixtureList();
-    b2Fixture *boxFixPtr = boxPtr->GetFixtureList();
-    b2PolygonShape *groundShape = (b2PolygonShape*)groundFixPtr->GetShape();
-    b2PolygonShape *boxShape = (b2PolygonShape*)boxFixPtr->GetShape();
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         /** Check for events **/
@@ -172,27 +163,26 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
     }
     
-    /** MixRation : [UP] [DOWN] **/
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        ;
+    /** Control **/
+    float camStep = 0.05f;
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        if (cam.center.x - camStep >= -27.0f) {
+            cam.center.Set(cam.center.x - camStep, cam.center.y);
+        } else {
+            cam.center.Set(-27.0f, cam.center.y);
+        }
     }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        ;
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        if (cam.center.x + camStep <= 27.0f) {
+            cam.center.Set(cam.center.x + camStep, cam.center.y);
+        } else {
+            cam.center.Set(27.0f, cam.center.y);
+        }
     }
+
     
-    /** Camera : [W] [S] [A] [D] **/
-    float camSpeed = 0.005f;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camPosition += camSpeed * camFront;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camPosition -= camSpeed * camFront;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camPosition -= glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camPosition += glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        ball->ApplyForce(force, ball->GetPosition(), true);
     }
 }
 
@@ -200,23 +190,60 @@ void processInput(GLFWwindow *window)
 
 void genesis()
 {
-    /** Ground **/
+    /** Ball **/
     // 1. Define body
-    b2BodyDef groundDef;
-    groundDef.position.Set(0.0f, -10.0f);
+    b2BodyDef ballDef;
+    ballDef.type = b2_dynamicBody;
+    ballDef.position.Set(10.0f, 10.0f);
     // 2. Create body by def
-    b2Body* ground = world.CreateBody(&groundDef);
+    ball = world.CreateBody(&ballDef);
     // 3. Set shape
-    b2PolygonShape groundShape;
-    groundShape.SetAsBox(20.0f, 2.0f); // The extents are the half-widths of the box.
-    // 4. Add fixture
-    ground->CreateFixture(&groundShape, 0.0f); // Add the ground fixture to the ground body.
+    b2CircleShape ballShape;
+    ballShape.m_p.Set(2.0f, 2.0f);
+    ballShape.m_radius = 1.0f;
+    // 4.1. Define fixture
+    b2FixtureDef ballFixDef;
+    ballFixDef.shape = &ballShape;
+    ballFixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
+    ballFixDef.friction = 0.9f; // Override the default friction.
+    ballFixDef.restitution = 0.7f;
+    // 4.2. Add fixture
+    ball->CreateFixture(&ballFixDef);
+    
+    /** Borders **/
+    // Up & Down
+    b2PolygonShape longBorderShape;
+    longBorderShape.SetAsBox(50.0f, 0.5f);
+    // Up
+    b2BodyDef uBorderDef;
+    uBorderDef.position.Set(0.0f, 19.5f);
+    b2Body* uBorder = world.CreateBody(&uBorderDef);
+    uBorder->CreateFixture(&longBorderShape, 0.0f);
+    // Down
+    b2BodyDef dBorderDef;
+    dBorderDef.position.Set(0.0f, -19.5f);
+    b2Body* dBorder = world.CreateBody(&dBorderDef);
+    dBorder->CreateFixture(&longBorderShape, 0.0f);
+    // Left & Right
+    b2PolygonShape shortBorderShape;
+    shortBorderShape.SetAsBox(0.5f, 19.0f);
+    // Left
+    b2BodyDef lBorderDef;
+    lBorderDef.position.Set(-49.5f, 0.0f);
+    b2Body* lBorder = world.CreateBody(&lBorderDef);
+    lBorder->CreateFixture(&shortBorderShape, 0.0f);
+    // Right
+    b2BodyDef rBorderDef;
+    rBorderDef.position.Set(49.5f, 0.0f);
+    b2Body* rBorder = world.CreateBody(&rBorderDef);
+    rBorder->CreateFixture(&shortBorderShape, 0.0f);
+    
 
     /** Box **/
     // 1. Define body
     b2BodyDef boxDef;
     boxDef.type = b2_dynamicBody;
-    boxDef.position.Set(0.0f, 40.0f);
+    boxDef.position.Set(0.0f, 11.0f);
     // 2. Create body by def
     b2Body* box = world.CreateBody(&boxDef);
     // 3. Set shape
@@ -226,7 +253,8 @@ void genesis()
     b2FixtureDef boxFxtDef;
     boxFxtDef.shape = &boxShape;
     boxFxtDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
-    boxFxtDef.friction = 0.9f; // Override the default friction.
+    boxFxtDef.friction = 0.1f; // Override the default friction.
     // 4.2. Add fixture
     box->CreateFixture(&boxFxtDef);
+    
 }

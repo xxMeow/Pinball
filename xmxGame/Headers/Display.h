@@ -16,8 +16,8 @@ struct Camera
 {
     Camera()
     {
-        center.Set(0.0f, 20.0f);
-        width = 1280;
+        center.Set(-27.0f, 0.0f);
+        width = 800;
         height = 800;
     }
 
