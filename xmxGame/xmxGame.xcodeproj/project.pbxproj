@@ -39,7 +39,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		221B6920232FD8BD0070DE51 /* Shader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shader.h; sourceTree = "<group>"; };
+		221B6920232FD8BD0070DE51 /* Program.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Program.h; sourceTree = "<group>"; };
 		221B6923232FDAD40070DE51 /* VertexShader.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = VertexShader.glsl; sourceTree = "<group>"; };
 		221B6924232FDAFA0070DE51 /* FragmentShader.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = FragmentShader.glsl; sourceTree = "<group>"; };
 		22C86C69233334EA00FFF73A /* HeaderProc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HeaderProc.cpp; sourceTree = "<group>"; };
@@ -56,6 +56,13 @@
 		CA591FD2234B577600D5E643 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		CA591FD4234B578300D5E643 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		CA591FD6234B579000D5E643 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		CA849C87234D156B00BBB919 /* Display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Display.h; sourceTree = "<group>"; };
+		CA849C92234D216600BBB919 /* PointVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = PointVS.glsl; sourceTree = "<group>"; };
+		CA849C94234D233800BBB919 /* LineVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = LineVS.glsl; sourceTree = "<group>"; };
+		CA849C95234D234A00BBB919 /* LineFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = LineFS.glsl; sourceTree = "<group>"; };
+		CA849C96234D243D00BBB919 /* TriangleVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = TriangleVS.glsl; sourceTree = "<group>"; };
+		CA849C97234D245000BBB919 /* TriangleFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = TriangleFS.glsl; sourceTree = "<group>"; };
+		CA849C98234D247900BBB919 /* PointFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = PointFS.glsl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,8 +83,9 @@
 		221B691F232FD8680070DE51 /* Headers */ = {
 			isa = PBXGroup;
 			children = (
-				221B6920232FD8BD0070DE51 /* Shader.h */,
+				221B6920232FD8BD0070DE51 /* Program.h */,
 				22F8F97323377BCD00408B4A /* stb_image.h */,
+				CA849C87234D156B00BBB919 /* Display.h */,
 			);
 			path = Headers;
 			sourceTree = "<group>";
@@ -87,6 +95,12 @@
 			children = (
 				221B6923232FDAD40070DE51 /* VertexShader.glsl */,
 				221B6924232FDAFA0070DE51 /* FragmentShader.glsl */,
+				CA849C92234D216600BBB919 /* PointVS.glsl */,
+				CA849C98234D247900BBB919 /* PointFS.glsl */,
+				CA849C94234D233800BBB919 /* LineVS.glsl */,
+				CA849C95234D234A00BBB919 /* LineFS.glsl */,
+				CA849C96234D243D00BBB919 /* TriangleVS.glsl */,
+				CA849C97234D245000BBB919 /* TriangleFS.glsl */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";

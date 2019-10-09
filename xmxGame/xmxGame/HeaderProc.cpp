@@ -6,5 +6,5 @@
 //  Copyright © 2019 XMX. All rights reserved.
 //
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../Headers/stb_image.h"
+//#define STB_IMAGE_IMPLEMENTATION
+//#include "../Headers/stb_image.h"

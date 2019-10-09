@@ -18,11 +18,12 @@
 #include <iostream>
 //#include <cmath>
 
-#include "../Headers/Shader.h"
+#include "../Headers/Program.h"
+#include "../Headers/Display.h"
 //#include "../Headers/stb_image.h"
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+//#define WINDOW_WIDTH 800
+//#define WINDOW_HEIGHT 600
 
 /** Camera setting **/
 glm::vec3 camPosition = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -41,7 +42,7 @@ void worldRun();
 /** Render functions **/
 GLFWwindow *window;
 int beforeRender();
-int inRender(Shader shader);
+int inRender(Program shader);
 int afterRender();
 
 /** Setup vertex data **/
@@ -61,9 +62,12 @@ int main(int argc, const char *argv[])
     
     /** Render **/
     beforeRender();
-    Shader shader("../Shaders/VertexShader.glsl", "../Shaders/FragmentShader.glsl");
+    Program shader("../Shaders/VertexShader.glsl", "../Shaders/FragmentShader.glsl");
+    std::cout << "Program ID: " << shader.ID << std::endl;
     inRender(shader);
     afterRender();
+    
+    draw.Destroy();
     
     return 0;
 }
@@ -138,9 +142,8 @@ void worldRun()
     box->CreateFixture(&boxFxtDef);
 
     /** Simulation **/
-    // Prepare for simulation. Typically we use a time step of 1/60 of a
-    // second (60Hz) and 10 iterations. This provides a high quality simulation
-    // in most game scenarios.
+    // Prepare for simulation. Typically we use a time step of 1/60 of a second (60Hz) and 10 iterations.
+    // This provides a high quality simulation in most game scenarios.
     float32 timeStep = 1.0f / 60.0f;
     int32 velocityIterations = 6;
     int32 positionIterations = 2;
@@ -151,10 +154,9 @@ void worldRun()
         // It is generally best to keep the time step and iterations fixed.
         world.Step(timeStep, velocityIterations, positionIterations);
 
-        // Now print the position and angle of the body.
+        // Rendering
         b2Vec2 position = box->GetPosition();
         float32 angle = box->GetAngle();
-
         printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
     }
 }
@@ -176,7 +178,7 @@ int beforeRender()
 #endif
     
     /** Create a GLFW window **/
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "xmxOpenGL", NULL, NULL);
+    window = glfwCreateWindow(cam.width, cam.height, "xmxOpenGL", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window." << std::endl;
         glfwTerminate();
@@ -185,10 +187,6 @@ int beforeRender()
     // Set the context of this window as the main context of current thread
     glfwMakeContextCurrent(window);
     
-    /** Callback Functions should be registered after creating window and before initializing render loop **/
-    // Pass the pointer of framebuffer_size_callback to the GLFW
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    
     // Initialize GLAD : this should be done before using any openGL function
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD." << std::endl;
@@ -196,11 +194,17 @@ int beforeRender()
         return -1;
     }
     
-
+    
+    /** Callback Functions **/
+    // Callback functions should be registered after creating window and before initializing render loop
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    
+    draw.Create();
+    
     return 0;
 }
 
-int inRender(Shader shader)
+int inRender(Program shader)
 {
     
     unsigned int VAO, VBO;
@@ -209,9 +213,9 @@ int inRender(Shader shader)
     
     // Bind the VAO
     glBindVertexArray(VAO);
-    // Bind the VBO
+    // Bind the VBO as GL_ARRAY_BUFFER
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // glBufferData() will copy datas to the buffer which is being bound right now
+    // glBufferData() will copy datas to the buffer which is being bound right now (here it's VBO!)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     
     /** glVertexAttribPointer() will get each vertex attributes from the VBO
@@ -246,7 +250,7 @@ int inRender(Shader shader)
         glClear(GL_COLOR_BUFFER_BIT); // Use the color to clear screen - Use Status
         
         /** Render triangle **/
-        shader.use();
+        glUseProgram(shader.ID);
         
         glBindVertexArray(VAO);
         // In fact, we don't need to bind the VAO every render loop here since we only have a single VAO. We just do it so to keep things a bit organized
