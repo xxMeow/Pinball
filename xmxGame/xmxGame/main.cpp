@@ -40,6 +40,7 @@ b2World world(gravity);
 void genesis();
 
 /** Simulation settings **/
+int stepCount = 0;
 float32 timeStep = 1.0f / 60.0f;
 int32 velocityIterations = 6;
 int32 positionIterations = 2;
@@ -47,14 +48,6 @@ int32 positionIterations = 2;
 /** Render functions **/
 GLFWwindow *window;
 
-/** Setup vertex data **/
-// Each vertex includes 3 coordinates (x, y, z:depth), the middle point of space is (0.0, 0.0, 0.0)
-float vertices[] = {
-    // Position          // Color
-     0.5f, -0.5f, 0.0f,  0.8f, 0.0f, 0.0f, // Right
-    -0.5f, -0.5f, 0.0f,  0.0f, 0.8f, 0.0f, // Left
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 0.8f  // Top
-};
 
 int main(int argc, const char *argv[])
 {
@@ -100,113 +93,48 @@ int main(int argc, const char *argv[])
     
     /** ---------------------------------- Simulation & Rendering ---------------------------------- **/
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    // Rendering
-    Program shader("../Shaders/VertexShader.glsl", "../Shaders/FragmentShader.glsl");
-    std::cout << "Program ID: " << shader.ID << std::endl;
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    
-    // Bind the VAO
-    glBindVertexArray(VAO);
-    // Bind the VBO as GL_ARRAY_BUFFER
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // glBufferData() will copy datas to the buffer which is being bound right now (here it's VBO!)
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    
-    /** glVertexAttribPointer() will get each vertex attributes from the VBO
-     *  void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer);
-     **/
-    // Position Pointer
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // Color Pointer
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    
-    /** Unbind **/
-    // Since glAttribArrayPointer() has registered VBO as the vertex attributes' bound vertex buffer object, now we can unbind it safely
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // Similar to the VBO, the VAO can be also safely unbound now so that this VAO won't get accidentally modified by other VAO calls
-    // However, modifying other VAOs required a call to glBindVertexArray() anyways so it's okay that don't do the unbinding to VAOs (but not VBOs) when it's not directly necessary
-    glBindVertexArray(0);
-    
     // Uncomment this call to draw in wireframe polygons
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Option: GL_FILL(default), GL_POINT, GL_LINE
-        
-    int i = 0;
+    
+    
     b2Vec2 myPoint(0.0f, 0.0f);
     b2Color myColor(1.0f, 1.0f, 1.0f, 1.0f);
-    b2Body* groundPtr = world.GetBodyList();
-    b2Body* boxPtr = groundPtr->GetNext();
+    
+    b2Body *boxPtr = world.GetBodyList();
+    b2Body *groundPtr = boxPtr->GetNext();
+    
+    b2Fixture *groundFixPtr = groundPtr->GetFixtureList();
+    b2Fixture *boxFixPtr = boxPtr->GetFixtureList();
+    b2PolygonShape *groundShape = (b2PolygonShape*)groundFixPtr->GetShape();
+    b2PolygonShape *boxShape = (b2PolygonShape*)boxFixPtr->GetShape();
     // Render loop
     while (!glfwWindowShouldClose(window)) {
-        // Check for events
+        /** Check for events **/
         processInput(window);
         
-        /** Other rendering operations **/
-        
-        // Set background clolor
+        /** Set background clolor **/
         glClearColor(0.2f, 0.2f, 0.5f, 1.0f); // Set color value (R,G,B,A) - Set Status
         glClear(GL_COLOR_BUFFER_BIT); // Use the color to clear screen - Use Status
         
-        draw.DrawPoint(myPoint, 50.0f, myColor);
-        draw.Flush();
-        
-        
+        /** Simulation **/
         world.Step(timeStep, velocityIterations, positionIterations);
-
-        // Rendering
-        b2Vec2 groundPos = groundPtr->GetPosition();
-        b2Vec2 boxPos = boxPtr->GetPosition();
-        float32 groundAngle = groundPtr->GetAngle();
-        float32 boxAngle = boxPtr->GetAngle();
-        printf(" >> %d ---------------------\n", i);
-        printf("G: %4.2f %4.2f %4.2f\n", groundPos.x, groundPos.y, groundAngle);
-        printf("B: %4.2f %4.2f %4.2f\n", boxPos.x, boxPos.y, boxAngle);
+        stepCount ++;
+        printf(" >> %d ---------------------\n", stepCount);
+        printf("B: %4.2f %4.2f\n", boxPtr->GetPosition().x, boxPtr->GetPosition().y);
+        printf("G: %4.2f %4.2f\n", groundPtr->GetPosition().x, groundPtr->GetPosition().y);
+        
+        /** Prepare buffer **/
+        
+        draw.DrawPolygon(&(groundShape->GetVertex(0)), groundShape->GetVertexCount(), myColor);
+        draw.DrawPolygon(&(boxShape->GetVertex(0)), boxShape->GetVertexCount(), myColor);
         
         
-        
-        
-        /** Render triangle **/
-        glUseProgram(shader.ID);
-        
-        glBindVertexArray(VAO);
-        // In fact, we don't need to bind the VAO every render loop here since we only have a single VAO. We just do it so to keep things a bit organized
-        
-        // Tell OpenGL to draw 6 vertices whose indices are stored in the VBO
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        // glDrawElements() will access the elements in the VAO which is being bound right now
-        
-        //glBindVertexArray(0); // Again, we don't need to unbind it right now
-        
-        // Swap color buffers since double buffers are applied for rendering
-        /** After updating my MacOS to Mojave10.14.6, this function dose not cause flickering now **/
+        /** Display **/
+        draw.Flush();
         glfwSwapBuffers(window);
-        // Update the status of window
-        glfwPollEvents();
-        i ++;
+        glfwPollEvents(); // Update the status of window
     }
     
-    // Optional: De-allocate all resources once they've outlived their purpoose
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-//    glDeleteBuffers(1, &EBO);
-
-
-
-
 
 
 
@@ -234,7 +162,7 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
     }
     
-    /** MixRation : [UP] [Down] **/
+    /** MixRation : [UP] [DOWN] **/
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         ;
     }
@@ -265,12 +193,12 @@ void genesis()
     /** Ground **/
     // 1. Define body
     b2BodyDef groundDef;
-    groundDef.position.Set(0.0f, -20.0f);
+    groundDef.position.Set(0.0f, -10.0f);
     // 2. Create body by def
     b2Body* ground = world.CreateBody(&groundDef);
     // 3. Set shape
     b2PolygonShape groundShape;
-    groundShape.SetAsBox(50.0f, 10.0f); // The extents are the half-widths of the box.
+    groundShape.SetAsBox(20.0f, 2.0f); // The extents are the half-widths of the box.
     // 4. Add fixture
     ground->CreateFixture(&groundShape, 0.0f); // Add the ground fixture to the ground body.
 
@@ -278,17 +206,17 @@ void genesis()
     // 1. Define body
     b2BodyDef boxDef;
     boxDef.type = b2_dynamicBody;
-    boxDef.position.Set(0.0f, 4.0f);
+    boxDef.position.Set(0.0f, 40.0f);
     // 2. Create body by def
     b2Body* box = world.CreateBody(&boxDef);
     // 3. Set shape
-    b2PolygonShape boxShp;
-    boxShp.SetAsBox(1.0f, 1.0f);
+    b2PolygonShape boxShape;
+    boxShape.SetAsBox(3.0f, 3.0f);
     // 4.1. Define fixture
     b2FixtureDef boxFxtDef;
-    boxFxtDef.shape = &boxShp;
+    boxFxtDef.shape = &boxShape;
     boxFxtDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
-    boxFxtDef.friction = 0.3f; // Override the default friction.
+    boxFxtDef.friction = 0.9f; // Override the default friction.
     // 4.2. Add fixture
     box->CreateFixture(&boxFxtDef);
 }
