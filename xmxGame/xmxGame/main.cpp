@@ -30,7 +30,7 @@ void processInput(GLFWwindow *window);
 b2Vec2 gravity(0.0f, -10.0f);
 b2World world(gravity);
 b2Body* ball;
-b2Vec2 force(0.0f, 2.5f);
+b2Vec2 force(1.5f, 1.5f);
 void genesis();
 
 /** Simulation settings **/
@@ -182,7 +182,7 @@ void processInput(GLFWwindow *window)
 
     
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        ball->ApplyForce(force, ball->GetPosition(), true);
+        ball->ApplyLinearImpulse(force, ball->GetWorldCenter(), true);
     }
 }
 
@@ -205,8 +205,8 @@ void genesis()
     b2FixtureDef ballFixDef;
     ballFixDef.shape = &ballShape;
     ballFixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
-    ballFixDef.friction = 0.9f; // Override the default friction.
-    ballFixDef.restitution = 0.7f;
+    ballFixDef.friction = 0.5f; // Override the default friction.
+    ballFixDef.restitution = 0.4f;
     // 4.2. Add fixture
     ball->CreateFixture(&ballFixDef);
     
@@ -214,29 +214,35 @@ void genesis()
     // Up & Down
     b2PolygonShape longBorderShape;
     longBorderShape.SetAsBox(50.0f, 0.5f);
+    b2FixtureDef longBorderFixDef;
+    longBorderFixDef.shape = &longBorderShape;
+    longBorderFixDef.friction = 0.2f;
     // Up
     b2BodyDef uBorderDef;
     uBorderDef.position.Set(0.0f, 19.5f);
     b2Body* uBorder = world.CreateBody(&uBorderDef);
-    uBorder->CreateFixture(&longBorderShape, 0.0f);
+    uBorder->CreateFixture(&longBorderFixDef);
     // Down
     b2BodyDef dBorderDef;
     dBorderDef.position.Set(0.0f, -19.5f);
     b2Body* dBorder = world.CreateBody(&dBorderDef);
-    dBorder->CreateFixture(&longBorderShape, 0.0f);
+    dBorder->CreateFixture(&longBorderFixDef);
     // Left & Right
     b2PolygonShape shortBorderShape;
     shortBorderShape.SetAsBox(0.5f, 19.0f);
+    b2FixtureDef shortBorderFixDef;
+    shortBorderFixDef.shape = &shortBorderShape;
+    shortBorderFixDef.friction = 0.2f;
     // Left
     b2BodyDef lBorderDef;
     lBorderDef.position.Set(-49.5f, 0.0f);
     b2Body* lBorder = world.CreateBody(&lBorderDef);
-    lBorder->CreateFixture(&shortBorderShape, 0.0f);
+    lBorder->CreateFixture(&shortBorderFixDef);
     // Right
     b2BodyDef rBorderDef;
     rBorderDef.position.Set(49.5f, 0.0f);
     b2Body* rBorder = world.CreateBody(&rBorderDef);
-    rBorder->CreateFixture(&shortBorderShape, 0.0f);
+    rBorder->CreateFixture(&shortBorderFixDef);
     
 
     /** Box **/
@@ -250,11 +256,11 @@ void genesis()
     b2PolygonShape boxShape;
     boxShape.SetAsBox(3.0f, 3.0f);
     // 4.1. Define fixture
-    b2FixtureDef boxFxtDef;
-    boxFxtDef.shape = &boxShape;
-    boxFxtDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
-    boxFxtDef.friction = 0.1f; // Override the default friction.
+    b2FixtureDef boxFixDef;
+    boxFixDef.shape = &boxShape;
+    boxFixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
+    boxFixDef.friction = 0.1f; // Override the default friction.
     // 4.2. Add fixture
-    box->CreateFixture(&boxFxtDef);
+    box->CreateFixture(&boxFixDef);
     
 }
