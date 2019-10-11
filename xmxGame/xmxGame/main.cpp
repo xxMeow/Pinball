@@ -27,9 +27,14 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 /** Box2D world **/
-b2Vec2 gravity(0.0f, -2.0f);
+float worldWidthHalf = 100.0f;
+float worldHeightHalf = 20.0f;
+float thicknessHalf = 0.3f;
+b2Vec2 gravity(0.0f, -1.0f);
 b2World world(gravity);
 b2Body* ball;
+b2Vec2 posToDown(b2Vec2 offset, b2Vec2 size);
+b2Vec2 posToUp(b2Vec2 offset, b2Vec2 size);
 void genesis();
 
 /** Simulation settings **/
@@ -105,8 +110,7 @@ int main(int argc, const char *argv[])
     b2Color myColor(1.0f, 1.0f, 1.0f, 1.0f);
     
     /** For logging **/
-    b2Body *boxPtr = world.GetBodyList();
-    b2Body *groundPtr = boxPtr->GetNext();
+    b2Body *boxPtr = world.GetBodyList();\
     
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -120,12 +124,15 @@ int main(int argc, const char *argv[])
         /** Simulation **/
         world.Step(timeStep, velocityIterations, positionIterations);
         stepCount ++;
-        printf(" >> %d ---------------------\n", stepCount);
-        printf("B: %4.2f %4.2f\n", boxPtr->GetPosition().x, boxPtr->GetPosition().y);
-        printf("G: %4.2f %4.2f\n", groundPtr->GetPosition().x, groundPtr->GetPosition().y);
+        printf(" >> %d >> %4.2f %4.2f\n", stepCount, boxPtr->GetPosition().x, boxPtr->GetPosition().y);
         
+        // Reset balls velocity
+        b2ContactEdge* c = ball->GetContactList();
+        if (c != NULL && ball->GetWorldCenter().y > c->other->GetWorldCenter().y) {
+            ball->SetLinearVelocity(b2Vec2(0.0f, 4.0f));
+        }
         
-        /** Move amera **/
+        /** Move camera **/
         cam.center.Set(ball->GetWorldCenter().x, 0);
         
         
@@ -175,89 +182,176 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         ball->ApplyForce(b2Vec2(forceX, 0.0f), ball->GetWorldCenter(), true);
     }
-    float forceY = 5.0f;
+    /*
+    float forceY = 1.0f;
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         ball->ApplyForce(b2Vec2(0.0f, forceY), ball->GetWorldCenter(), true);
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         ball->ApplyForce(b2Vec2(0.0f, -forceY), ball->GetWorldCenter(), true);
     }
+    b2Vec2 v(0.0f, 0.5f);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        ball->SetAwake(true);
+        ball->SetLinearVelocity(v);
+    }
+     */
 }
 
-
+b2Vec2 posToDown(b2Vec2 offset, b2Vec2 sizeHalf)
+{
+    b2Vec2 pos(0.0f, 0.0f);
+    pos.x = -(worldWidthHalf - 2 * thicknessHalf) + offset.x + sizeHalf.x;
+    pos.y = -(worldHeightHalf - 2 * thicknessHalf) + offset.y + sizeHalf.y;
+    return pos;
+}
+b2Vec2 posToUp(b2Vec2 offset, b2Vec2 sizeHalf)
+{
+    b2Vec2 pos(0.0f, 0.0f);
+    pos.x = -(worldWidthHalf - 2 * thicknessHalf) + offset.x + sizeHalf.x;
+    pos.y = worldHeightHalf - 2 * thicknessHalf - offset.y - sizeHalf.y;
+    return pos;
+}
+/*
+b2Vec2 posToLeft(b2Vec2 offset, b2Vec2 sizeHalf)
+{
+    b2Vec2 pos(0.0f, 0.0f);
+    pos.x = -(worldWidthHalf - 2 * thicknessHalf) + offset.x + sizeHalf.x;
+    pos.y = -(worldHeightHalf - 2 * thicknessHalf) + offset.y + sizeHalf.y;
+    return pos;
+}
+b2Vec2 posToRight(b2Vec2 offset, b2Vec2 sizeHalf)
+{
+    b2Vec2 pos(0.0f, 0.0f);
+    pos.x = -(worldWidthHalf - 2 * thicknessHalf) + offset.x + sizeHalf.x;
+    pos.y = -(worldHeightHalf - 2 * thicknessHalf) + offset.y + sizeHalf.y;
+    return pos;
+}
+*/
 
 void genesis()
 {
     /** Ball **/
-    // 1. Define body
-    b2BodyDef ballDef;
-    ballDef.type = b2_dynamicBody;
-    ballDef.position.Set(-20.0f, 2.0f);
-    // 2. Create body by def
-    ball = world.CreateBody(&ballDef);
-    // 3. Set shape
-    b2CircleShape ballShape;
-    ballShape.m_p.Set(2.0f, 2.0f);
-    ballShape.m_radius = 1.0f;
-    // 4.1. Define fixture
-    b2FixtureDef ballFixDef;
-    ballFixDef.shape = &ballShape;
-    ballFixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
-    ballFixDef.restitution = 1.0f;
-    // 4.2. Add fixture
-    ball->CreateFixture(&ballFixDef);
+    {
+        b2BodyDef def;
+        def.type = b2_dynamicBody;
+//        b2Vec2 pos = posToDown(b2Vec2(10.0f, 4.0f), b2Vec2(0.5f, 0.5f));
+        b2Vec2 pos = posToDown(b2Vec2(20.0f, 14.0f), b2Vec2(0.5f, 0.5f));
+        def.position.Set(pos.x, pos.y);
+        // 2. Create body by def
+        ball = world.CreateBody(&def);
+        // 3. Set shape
+        b2CircleShape shape;
+        shape.m_p.Set(2.0f, 2.0f);
+        shape.m_radius = 0.5f;
+        // 4.1. Define fixture
+        b2FixtureDef fixDef;
+        fixDef.shape = &shape;
+        fixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
+        fixDef.restitution = 1.0f;
+        // 4.2. Add fixture
+        ball->CreateFixture(&fixDef);
+    }
     
-    /** Borders **/
-    // Up & Down
-    b2PolygonShape longBorderShape;
-    longBorderShape.SetAsBox(50.0f, 0.5f);
-    b2FixtureDef longBorderFixDef;
-    longBorderFixDef.shape = &longBorderShape;
-    longBorderFixDef.friction = 0.2f;
-    // Up
-    b2BodyDef uBorderDef;
-    uBorderDef.position.Set(0.0f, 19.5f);
-    b2Body* uBorder = world.CreateBody(&uBorderDef);
-    uBorder->CreateFixture(&longBorderFixDef);
-    // Down
-    b2BodyDef dBorderDef;
-    dBorderDef.position.Set(0.0f, -19.5f);
-    b2Body* dBorder = world.CreateBody(&dBorderDef);
-    dBorder->CreateFixture(&longBorderFixDef);
-    // Left & Right
-    b2PolygonShape shortBorderShape;
-    shortBorderShape.SetAsBox(0.5f, 19.0f);
-    b2FixtureDef shortBorderFixDef;
-    shortBorderFixDef.shape = &shortBorderShape;
-    shortBorderFixDef.friction = 0.2f;
-    // Left
-    b2BodyDef lBorderDef;
-    lBorderDef.position.Set(-49.5f, 0.0f);
-    b2Body* lBorder = world.CreateBody(&lBorderDef);
-    lBorder->CreateFixture(&shortBorderFixDef);
-    // Right
-    b2BodyDef rBorderDef;
-    rBorderDef.position.Set(49.5f, 0.0f);
-    b2Body* rBorder = world.CreateBody(&rBorderDef);
-    rBorder->CreateFixture(&shortBorderFixDef);
-    
+    /** Borders :  x **/
+    {
+        // Up & Down
+        b2PolygonShape longBorderShape;
+        longBorderShape.SetAsBox(worldWidthHalf, thicknessHalf);
+        // Up
+        b2BodyDef uBorderDef;
+        uBorderDef.position.Set(0.0f, worldHeightHalf-thicknessHalf);
+        b2Body* uBorder = world.CreateBody(&uBorderDef);
+        uBorder->CreateFixture(&longBorderShape, 0.0f);
+        // Down
+        b2BodyDef dBorderDef;
+        dBorderDef.position.Set(0.0f, -(worldHeightHalf-thicknessHalf));
+        b2Body* dBorder = world.CreateBody(&dBorderDef);
+        dBorder->CreateFixture(&longBorderShape, 0.0f);
+        // Left & Right
+        b2PolygonShape shortBorderShape;
+        shortBorderShape.SetAsBox(thicknessHalf, worldHeightHalf);
+        // Left
+        b2BodyDef lBorderDef;
+        lBorderDef.position.Set(-(worldWidthHalf-thicknessHalf), 0.0f);
+        b2Body* lBorder = world.CreateBody(&lBorderDef);
+        lBorder->CreateFixture(&shortBorderShape, 0.0f);
+        // Right
+        b2BodyDef rBorderDef;
+        rBorderDef.position.Set(worldWidthHalf-thicknessHalf, 0.0f);
+        b2Body* rBorder = world.CreateBody(&rBorderDef);
+        rBorder->CreateFixture(&shortBorderShape, 0.0f);
+    }
 
-    /** Box **/
-    // 1. Define body
-    b2BodyDef boxDef;
-    boxDef.type = b2_dynamicBody;
-    boxDef.position.Set(-30.0f, 11.0f);
-    // 2. Create body by def
-    b2Body* box = world.CreateBody(&boxDef);
-    // 3. Set shape
-    b2PolygonShape boxShape;
-    boxShape.SetAsBox(3.0f, 3.0f);
-    // 4.1. Define fixture
-    b2FixtureDef boxFixDef;
-    boxFixDef.shape = &boxShape;
-    boxFixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
-    boxFixDef.friction = 0.1f; // Override the default friction.
-    // 4.2. Add fixture
-    box->CreateFixture(&boxFixDef);
+    /** ------------------------------------------------------------------------------------------- **/
+    /** Area.1 **/
+    {
+        int n = 4;
+        int disDiff = 7.0f;
+        int heightDiff = 2.5f;
+        b2BodyDef defs[n];
+        b2PolygonShape shapes[n];
+        b2Body* boxes[n];
+        b2Vec2 sizeHalf(2.0f, 3.0f);
+        float posX = 20.0f;
+        for (int i = 0; i < n; i ++) {
+            b2Vec2 pos = posToDown(b2Vec2(posX, 0.0f), sizeHalf);
+            defs[i].position.Set(pos.x, pos.y);
+            boxes[i] = world.CreateBody(&defs[i]);
+            shapes[i].SetAsBox(sizeHalf.x, sizeHalf.y);
+            boxes[i]->CreateFixture(&shapes[i], 0.0f);
+            
+            posX += disDiff;
+            sizeHalf.y += heightDiff;
+        }
+        
+    }
+    /** Area.2 **/
+    {
+        int n = 3;
+        b2BodyDef defs[n];
+        b2PolygonShape shapes[n];
+        b2Body* boxes[n];
+        b2Vec2 offsets[] = {b2Vec2(0.0f, 26.0f), b2Vec2(7.0f, 20.0f), b2Vec2(22.0f, 22.0f)};
+        b2Vec2 sizes[] = {b2Vec2(3.0f, thicknessHalf*2), b2Vec2(6.0f, thicknessHalf*2), b2Vec2(7.0f, thicknessHalf*2)};
+        for (int i = 0; i < n; i ++) {
+            b2Vec2 pos = posToDown(offsets[i], sizes[i]);
+            defs[i].position.Set(pos.x, pos.y);
+            boxes[i] = world.CreateBody(&defs[i]);
+            shapes[i].SetAsBox(sizes[i].x, sizes[i].y);
+            boxes[i]->CreateFixture(&shapes[i], 0.0f);
+        }
+    }
+    
+    /** Area.3-1 **/
+    {
+        b2BodyDef def;
+        b2Vec2 offset(7.0f, 33.0f);
+        b2Vec2 size(19.5f, thicknessHalf*2);
+        b2Vec2 pos = posToDown(offset, size);
+        def.position.Set(pos.x, pos.y);
+        b2PolygonShape shape;
+        shape.SetAsBox(size.x, size.y);
+        b2Body* box = world.CreateBody(&def);
+        box->CreateFixture(&shape, 0.0f);
+    }
+    
+    /** Area.3-2 **/
+    {
+        int n = 2;
+        b2BodyDef defs[n];
+        b2PolygonShape shapes[n];
+        b2Body* boxes[n];
+        b2Vec2 offsets[] = {b2Vec2(40.0f, 16.0f), b2Vec2(40.0f, 21.0f)};
+        b2Vec2 sizes[] = {b2Vec2(23.0f, thicknessHalf*2), b2Vec2(24.0f, thicknessHalf*2)};
+        for (int i = 0; i < n; i ++) {
+            b2Vec2 pos = posToDown(offsets[i], sizes[i]);
+            defs[i].position.Set(pos.x, pos.y);
+            defs[i].angle = -0.25f * b2_pi;
+            boxes[i] = world.CreateBody(&defs[i]);
+            shapes[i].SetAsBox(sizes[i].x, sizes[i].y);
+            boxes[i]->CreateFixture(&shapes[i], 0.0f);
+        }
+    }
     
 }

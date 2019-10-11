@@ -22,7 +22,7 @@ struct Camera
     }
 
     void BuildProjectionMatrix(float32* m) {
-        b2Vec2 extents(25.0f, 25.0f);
+        b2Vec2 extents(22.0f, 22.0f);
 
         b2Vec2 lower = center - extents;
         b2Vec2 upper = center + extents;
