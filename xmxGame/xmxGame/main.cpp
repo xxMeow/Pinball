@@ -27,7 +27,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 /** Box2D world **/
-b2Vec2 gravity(0.0f, -2.5f);
+b2Vec2 gravity(0.0f, -2.0f);
 b2World world(gravity);
 b2Body* ball;
 void genesis();
@@ -168,12 +168,19 @@ void processInput(GLFWwindow *window)
     }
     
     /** Control **/
-    float xForce = 0.05f;
+    float forceX = 0.3f;
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        ball->ApplyForce(b2Vec2(-xForce, 0.0f), ball->GetWorldCenter(), true);
+        ball->ApplyForce(b2Vec2(-forceX, 0.0f), ball->GetWorldCenter(), true);
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        ball->ApplyForce(b2Vec2(xForce, 0.0f), ball->GetWorldCenter(), true);
+        ball->ApplyForce(b2Vec2(forceX, 0.0f), ball->GetWorldCenter(), true);
+    }
+    float forceY = 5.0f;
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        ball->ApplyForce(b2Vec2(0.0f, forceY), ball->GetWorldCenter(), true);
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        ball->ApplyForce(b2Vec2(0.0f, -forceY), ball->GetWorldCenter(), true);
     }
 }
 
@@ -185,7 +192,7 @@ void genesis()
     // 1. Define body
     b2BodyDef ballDef;
     ballDef.type = b2_dynamicBody;
-    ballDef.position.Set(-20.0f, 10.0f);
+    ballDef.position.Set(-20.0f, 2.0f);
     // 2. Create body by def
     ball = world.CreateBody(&ballDef);
     // 3. Set shape
@@ -195,8 +202,7 @@ void genesis()
     // 4.1. Define fixture
     b2FixtureDef ballFixDef;
     ballFixDef.shape = &ballShape;
-    ballFixDef.density = 0.5f; // Set the box density to be non-zero, so it will be dynamic.
-//    ballFixDef.friction = 0.0f; // Override the default friction.
+    ballFixDef.density = 1.0f; // Set the box density to be non-zero, so it will be dynamic.
     ballFixDef.restitution = 1.0f;
     // 4.2. Add fixture
     ball->CreateFixture(&ballFixDef);
