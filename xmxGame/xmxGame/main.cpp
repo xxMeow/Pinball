@@ -27,10 +27,9 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 /** Box2D world **/
-b2Vec2 gravity(0.0f, -10.0f);
+b2Vec2 gravity(0.0f, -2.5f);
 b2World world(gravity);
 b2Body* ball;
-b2Vec2 force(5.0f, -3.0f);
 void genesis();
 
 /** Simulation settings **/
@@ -125,6 +124,11 @@ int main(int argc, const char *argv[])
         printf("B: %4.2f %4.2f\n", boxPtr->GetPosition().x, boxPtr->GetPosition().y);
         printf("G: %4.2f %4.2f\n", groundPtr->GetPosition().x, groundPtr->GetPosition().y);
         
+        
+        /** Move amera **/
+        cam.center.Set(ball->GetWorldCenter().x, 0);
+        
+        
         /** Prepare buffer **/
         world.SetDebugDraw(&draw);
         world.DrawDebugData();
@@ -164,25 +168,12 @@ void processInput(GLFWwindow *window)
     }
     
     /** Control **/
-    float camStep = 0.05f;
+    float xForce = 0.05f;
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        if (cam.center.x - camStep >= -27.0f) {
-            cam.center.Set(cam.center.x - camStep, cam.center.y);
-        } else {
-            cam.center.Set(-27.0f, cam.center.y);
-        }
-        
+        ball->ApplyForce(b2Vec2(-xForce, 0.0f), ball->GetWorldCenter(), true);
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        if (cam.center.x + camStep <= 27.0f) {
-            cam.center.Set(cam.center.x + camStep, cam.center.y);
-        } else {
-            cam.center.Set(27.0f, cam.center.y);
-        }
-    }
-    
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        ball->ApplyLinearImpulse(force, ball->GetWorldCenter(), true);
+        ball->ApplyForce(b2Vec2(xForce, 0.0f), ball->GetWorldCenter(), true);
     }
 }
 
@@ -205,7 +196,7 @@ void genesis()
     b2FixtureDef ballFixDef;
     ballFixDef.shape = &ballShape;
     ballFixDef.density = 0.5f; // Set the box density to be non-zero, so it will be dynamic.
-    ballFixDef.friction = 0.5f; // Override the default friction.
+//    ballFixDef.friction = 0.0f; // Override the default friction.
     ballFixDef.restitution = 1.0f;
     // 4.2. Add fixture
     ball->CreateFixture(&ballFixDef);
