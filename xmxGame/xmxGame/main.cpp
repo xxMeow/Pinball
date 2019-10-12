@@ -27,7 +27,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 /** Box2D world **/
-float worldWidthHalf = 120.0f;
+float worldWidthHalf = 130.0f;
 float worldHeightHalf = 20.0f;
 float thicknessHalf = 0.3f;
 b2Vec2 gravity(0.0f, -1.0f);
@@ -243,8 +243,11 @@ void genesis()
         def.type = b2_dynamicBody;
         b2Vec2 pos = posToDown(b2Vec2(10.0f, 4.0f), b2Vec2(0.5f, 0.5f)); // Origin
 //        b2Vec2 pos = posToDown(b2Vec2(31.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Channel
-//        b2Vec2 pos = posToDown(b2Vec2(91.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Near poor
+//        b2Vec2 pos = posToDown(b2Vec2(91.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor left
 //        b2Vec2 pos = posToDown(b2Vec2(121.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor
+//        b2Vec2 pos = posToDown(b2Vec2(171.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor Right
+//        b2Vec2 pos = posToDown(b2Vec2(181.0f, 5.0f), b2Vec2(0.5f, 0.5f)); // Poor Right Bottom
+//        b2Vec2 pos = posToDown(b2Vec2(202.0f, 30.0f), b2Vec2(0.5f, 0.5f)); // 2nd Poor
         def.position.Set(pos.x, pos.y);
         // 2. Create body by def
         ball = world.CreateBody(&def);
@@ -295,7 +298,7 @@ void genesis()
     }
 
     /** ------------------------------------------------------------------------------------------- **/
-    /** Area.1 **/
+    /** Area.1 **/ // Stairs
     {
         int n = 4;
         int disDiff = 7.0f;
@@ -370,7 +373,7 @@ void genesis()
         }
     }
     
-    /** Area.4 **/
+    /** Area.4 **/ // Little boxes
     {
         int n = 10;
         b2BodyDef defs[n];
@@ -393,7 +396,7 @@ void genesis()
         }
     }
     
-    /** Area.5 **/
+    /** Area.5 **/ // Boxes at left side of poor
     {
         int n = 4;
         b2BodyDef defs[n];
@@ -436,7 +439,7 @@ void genesis()
         b2BodyDef defs[n];
         b2PolygonShape shapes[n];
         b2Body* boxes[n];
-        b2Vec2 offsets[] = {b2Vec2(131.0f, 14.0f), b2Vec2(144.0f, 14.0f)};
+        b2Vec2 offsets[] = {b2Vec2(127.0f, 25.0f), b2Vec2(138.0f, 25.0f)};
         b2Vec2 sizes[] = {b2Vec2(4.0f, 4.0f), b2Vec2(3.0f, 3.0f)};
         for (int i = 0; i < n; i ++) {
             b2Vec2 pos = posToDown(offsets[i], sizes[i]);
@@ -448,4 +451,77 @@ void genesis()
         }
     }
     
+    /** Area.8-1 **/ // Upper boxes at right side of poor
+    {
+        int n = 7;
+        b2BodyDef defs[n];
+        b2PolygonShape shapes[n];
+        b2Body* boxes[n];
+        b2Vec2 offsets[] = {b2Vec2(160.0f, 21.8f), b2Vec2(160.0f, 14.8f), b2Vec2(168.0f, 29.0f), b2Vec2(190.0f, 14.8f), b2Vec2(169.0f, 16.0f), b2Vec2(180.0f, 24.0f), b2Vec2(191.2f, 14.8f)};
+        b2Vec2 sizes[] = {b2Vec2(thicknessHalf*2, 8.5f), b2Vec2(15.0f, thicknessHalf*2), b2Vec2(3.0f, thicknessHalf*2), b2Vec2(thicknessHalf*2, 12.0f), b2Vec2(6.0f, thicknessHalf*10), b2Vec2(thicknessHalf*8, 5.0f), b2Vec2(thicknessHalf*10, 6.0f)};
+        for (int i = 0; i < n; i ++) {
+            b2Vec2 pos = posToDown(offsets[i], sizes[i]);
+            defs[i].position.Set(pos.x, pos.y);
+            boxes[i] = world.CreateBody(&defs[i]);
+            shapes[i].SetAsBox(sizes[i].x, sizes[i].y);
+            boxes[i]->CreateFixture(&shapes[i], 0.0f);
+        }
+    }
+    
+    /** Area.8-2 **/ // Lower boxes at right side of poor
+    {
+        int n = 4;
+        b2BodyDef defs[n];
+        b2PolygonShape shapes[n];
+        b2FixtureDef fixs[n];
+        b2Body* boxes[n];
+        b2Vec2 offsets[] = {b2Vec2(160.0f, 6.8f), b2Vec2(167.0f, 0.0f), b2Vec2(174.0f, 6.8f), b2Vec2(181.0f, 0.0f)};
+        b2Vec2 size(thicknessHalf*2, 4.0f);
+        for (int i = 0; i < n; i ++) {
+            b2Vec2 pos = posToDown(offsets[i], size);
+            defs[i].position.Set(pos.x, pos.y);
+            boxes[i] = world.CreateBody(&defs[i]);
+            shapes[i].SetAsBox(size.x, size.y);
+            fixs[i].shape = &shapes[i];
+            fixs[i].restitution = 1.0f;
+            boxes[i]->CreateFixture(&fixs[i]);
+        }
+    }
+    
+    /** Area.9 **/ // 2nd Poor
+    {
+        int n = 2;
+        b2BodyDef defs[n];
+        b2PolygonShape shapes[n];
+        b2Body* boxes[n];
+        b2Vec2 offsets[] = {b2Vec2(202.0f, 0.0f), b2Vec2(252.8f, 0.0f)};
+        b2Vec2 sizes[] = {b2Vec2(thicknessHalf*10, worldHeightHalf*0.85), b2Vec2(thicknessHalf*10, worldHeightHalf/2)};
+        for (int i = 0; i < n; i ++) {
+            b2Vec2 pos = posToDown(offsets[i], sizes[i]);
+            defs[i].position.Set(pos.x, pos.y);
+            boxes[i] = world.CreateBody(&defs[i]);
+            shapes[i].SetAsBox(sizes[i].x, sizes[i].y);
+            boxes[i]->CreateFixture(&shapes[i], 0.0f);
+        }
+    }
+
+    /** Area.10 **/ // Boxes upon the 2nd poor
+    {
+        int n = 2;
+        b2BodyDef defs[n];
+        b2PolygonShape shapes[n];
+        b2FixtureDef fixs[n];
+        b2Body* boxes[n];
+        b2Vec2 offsets[] = {b2Vec2(215.0f, worldHeightHalf+2.0f), b2Vec2(235.0f, worldHeightHalf+4.0f)};
+        b2Vec2 sizes[] = {b2Vec2(6.0f, thicknessHalf*2), b2Vec2(4.0f, thicknessHalf*2)};
+        for (int i = 0; i < n; i ++) {
+            b2Vec2 pos = posToDown(offsets[i], sizes[i]);
+            defs[i].position.Set(pos.x, pos.y);
+            boxes[i] = world.CreateBody(&defs[i]);
+            shapes[i].SetAsBox(sizes[i].x, sizes[i].y);
+            fixs[i].shape = &shapes[i];
+            fixs[i].restitution = 1.0f;
+            boxes[i]->CreateFixture(&fixs[i]);
+        }
+    }
 }
