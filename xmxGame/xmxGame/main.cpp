@@ -241,12 +241,12 @@ void genesis()
     {
         b2BodyDef def;
         def.type = b2_dynamicBody;
-//        b2Vec2 pos = posToDown(b2Vec2(10.0f, 4.0f), b2Vec2(0.5f, 0.5f)); // Origin
+        b2Vec2 pos = posToDown(b2Vec2(10.0f, 4.0f), b2Vec2(0.5f, 0.5f)); // Origin
 //        b2Vec2 pos = posToDown(b2Vec2(31.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Channel
 //        b2Vec2 pos = posToDown(b2Vec2(91.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor left
 //        b2Vec2 pos = posToDown(b2Vec2(121.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor
 //        b2Vec2 pos = posToDown(b2Vec2(171.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor Right
-        b2Vec2 pos = posToDown(b2Vec2(181.0f, 5.0f), b2Vec2(0.5f, 0.5f)); // Poor Right Bottom
+//        b2Vec2 pos = posToDown(b2Vec2(181.0f, 5.0f), b2Vec2(0.5f, 0.5f)); // Poor Right Bottom
 //        b2Vec2 pos = posToDown(b2Vec2(202.0f, 30.0f), b2Vec2(0.5f, 0.5f)); // 2nd Poor
         def.position.Set(pos.x, pos.y);
         // 2. Create body by def
@@ -508,7 +508,7 @@ void genesis()
     /** Pulley **/
     {
         b2Vec2 boxOffset1(197.7f, 0.0f);
-        b2Vec2 boxOffset2(209.0f, 28.0f);
+        b2Vec2 boxOffset2(209.0f, 27.0f);
         b2Vec2 boxSize1(2.0f, thicknessHalf);
         b2Vec2 boxSize2(2.0f, 2.0f);
         b2Vec2 boxPos1 = posToDown(boxOffset1, boxSize1);
@@ -523,9 +523,14 @@ void genesis()
         b2PolygonShape boxShape1, boxShape2;
         boxShape1.SetAsBox(boxSize1.x, boxSize1.y);
         boxShape2.SetAsBox(boxSize2.x, boxSize2.y);
-        b2Body *box1, *box2;
+        b2Body* box1;
+        b2FixtureDef boxFixDef1;
+        boxFixDef1.shape = &boxShape1;
+        boxFixDef1.density = 1.0f;
+        boxFixDef1.restitution = 1.0f;
         box1 = world.CreateBody(&boxDef1);
-        box1->CreateFixture(&boxShape1, 1.0f);
+        box1->CreateFixture(&boxFixDef1);
+        b2Body* box2;
         box2 = world.CreateBody(&boxDef2);
         box2->CreateFixture(&boxShape2, 2.0f);
         
