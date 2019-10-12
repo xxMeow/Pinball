@@ -241,12 +241,12 @@ void genesis()
     {
         b2BodyDef def;
         def.type = b2_dynamicBody;
-        b2Vec2 pos = posToDown(b2Vec2(10.0f, 4.0f), b2Vec2(0.5f, 0.5f)); // Origin
+//        b2Vec2 pos = posToDown(b2Vec2(10.0f, 4.0f), b2Vec2(0.5f, 0.5f)); // Origin
 //        b2Vec2 pos = posToDown(b2Vec2(31.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Channel
 //        b2Vec2 pos = posToDown(b2Vec2(91.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor left
 //        b2Vec2 pos = posToDown(b2Vec2(121.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor
 //        b2Vec2 pos = posToDown(b2Vec2(171.0f, 34.0f), b2Vec2(0.5f, 0.5f)); // Poor Right
-//        b2Vec2 pos = posToDown(b2Vec2(181.0f, 5.0f), b2Vec2(0.5f, 0.5f)); // Poor Right Bottom
+        b2Vec2 pos = posToDown(b2Vec2(181.0f, 5.0f), b2Vec2(0.5f, 0.5f)); // Poor Right Bottom
 //        b2Vec2 pos = posToDown(b2Vec2(202.0f, 30.0f), b2Vec2(0.5f, 0.5f)); // 2nd Poor
         def.position.Set(pos.x, pos.y);
         // 2. Create body by def
@@ -457,8 +457,8 @@ void genesis()
         b2BodyDef defs[n];
         b2PolygonShape shapes[n];
         b2Body* boxes[n];
-        b2Vec2 offsets[] = {b2Vec2(160.0f, 21.8f), b2Vec2(160.0f, 14.8f), b2Vec2(168.0f, 29.0f), b2Vec2(190.0f, 14.8f), b2Vec2(169.0f, 16.0f), b2Vec2(180.0f, 24.0f), b2Vec2(191.2f, 14.8f)};
-        b2Vec2 sizes[] = {b2Vec2(thicknessHalf*2, 8.5f), b2Vec2(15.0f, thicknessHalf*2), b2Vec2(3.0f, thicknessHalf*2), b2Vec2(thicknessHalf*2, 12.0f), b2Vec2(6.0f, thicknessHalf*10), b2Vec2(thicknessHalf*8, 5.0f), b2Vec2(thicknessHalf*10, 6.0f)};
+        b2Vec2 offsets[] = {b2Vec2(160.0f, 21.8f), b2Vec2(160.0f, 14.8f), b2Vec2(168.0f, 29.0f), b2Vec2(190.0f, 14.8f), b2Vec2(169.0f, 16.0f), b2Vec2(180.0f, 24.0f), b2Vec2(191.2f, 10.0f)};
+        b2Vec2 sizes[] = {b2Vec2(thicknessHalf*2, 8.5f), b2Vec2(15.0f, thicknessHalf*2), b2Vec2(3.0f, thicknessHalf*2), b2Vec2(thicknessHalf*2, 12.0f), b2Vec2(6.0f, thicknessHalf*10), b2Vec2(thicknessHalf*8, 5.0f), b2Vec2(thicknessHalf*10, 8.0f)};
         for (int i = 0; i < n; i ++) {
             b2Vec2 pos = posToDown(offsets[i], sizes[i]);
             defs[i].position.Set(pos.x, pos.y);
@@ -502,6 +502,55 @@ void genesis()
             boxes[i] = world.CreateBody(&defs[i]);
             shapes[i].SetAsBox(sizes[i].x, sizes[i].y);
             boxes[i]->CreateFixture(&shapes[i], 0.0f);
+        }
+    }
+    
+    /** Pulley **/
+    {
+        b2Vec2 boxOffset1(197.7f, 0.0f);
+        b2Vec2 boxOffset2(209.0f, 28.0f);
+        b2Vec2 boxSize1(2.0f, thicknessHalf);
+        b2Vec2 boxSize2(2.0f, 2.0f);
+        b2Vec2 boxPos1 = posToDown(boxOffset1, boxSize1);
+        b2Vec2 boxPos2 = posToDown(boxOffset2, boxSize2);
+        b2BodyDef boxDef1, boxDef2;
+        boxDef1.type = b2_dynamicBody;
+        boxDef1.fixedRotation = true;
+        boxDef2.type = b2_dynamicBody;
+        boxDef2.fixedRotation = true;
+        boxDef1.position.Set(boxPos1.x, boxPos1.y);
+        boxDef2.position.Set(boxPos2.x, boxPos2.y);
+        b2PolygonShape boxShape1, boxShape2;
+        boxShape1.SetAsBox(boxSize1.x, boxSize1.y);
+        boxShape2.SetAsBox(boxSize2.x, boxSize2.y);
+        b2Body *box1, *box2;
+        box1 = world.CreateBody(&boxDef1);
+        box1->CreateFixture(&boxShape1, 1.0f);
+        box2 = world.CreateBody(&boxDef2);
+        box2->CreateFixture(&boxShape2, 2.0f);
+        
+        b2Vec2 ancPos1(boxPos1.x, worldHeightHalf-2.0f);
+        b2Vec2 ancPos2(boxPos2.x, worldHeightHalf-2.0f);
+        float32 ratio = 1.0f;
+        b2PulleyJointDef jointDef;
+        jointDef.Initialize(box1, box2, ancPos1, ancPos2, boxPos1, boxPos2, ratio);
+        b2PulleyJoint* joint;
+        joint = (b2PulleyJoint*)world.CreateJoint(&jointDef);
+        
+        /** Boxes on left **/
+        {
+            b2BodyDef def;
+            b2PolygonShape shape;
+            b2Body* box;
+            b2Vec2 offset(197.5f, 7.0f);
+            b2Vec2 size(0.2f, 2.0f);
+            
+            b2Vec2 pos = posToDown(offset, size);
+            def.type = b2_dynamicBody;
+            def.position.Set(pos.x, pos.y);
+            box = world.CreateBody(&def);
+            shape.SetAsBox(size.x, size.y);
+            box->CreateFixture(&shape, 20.0f);
         }
     }
 
